@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const CHANNEL_ID = '2994048';          // replace with your ThingSpeak channel ID
+const CHANNEL_ID = '3328351';          // replace with your ThingSpeak channel ID
 const READ_API_KEY = 'WNWOQ3FX50E7FQ1P'; // from your Arduino sketch
 const FETCH_INTERVAL = 15000;          // ThingSpeak free tier min 15s
 
