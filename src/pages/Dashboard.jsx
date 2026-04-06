@@ -4,10 +4,12 @@ import StatCard from '../components/StatCard';
 import PoleCard from '../components/PoleCard';
 import Toast from '../components/Toast';
 import usePoles from '../hooks/usePoles';
+import useThingSpeak from '../hooks/useThingSpeak';
 import { WX_ICONS, WX_DESC, fmtTime } from '../data';
 
 export default function Dashboard() {
   const { poles, logs, toast, sendPowerCmd } = usePoles();
+  const { data: ts } = useThingSpeak();
   const [clock, setClock] = useState(new Date());
   const [loc, setLoc] = useState({ name: 'Detecting...', coords: '--°N, --°E' });
   const [wx, setWx] = useState({ icon: '🌡️', temp: 'Loading...', desc: 'Fetching weather...' });
@@ -109,6 +111,36 @@ export default function Dashboard() {
           <div>
             <div className="a-title">⚠️ Leakage Detected – Power Disconnected</div>
             <div className="a-sub">{leaking.map(p => `${p.id} (${p.loc})`).join(' | ')}</div>
+          </div>
+        </div>
+      )}
+
+      {/* ESP32 Live Node */}
+      {ts.status !== 'loading' && (
+        <div style={{ background: 'var(--card)', border: `1px solid ${ts.leakDetected ? 'rgba(239,68,68,0.4)' : 'var(--border)'}`, borderRadius: 12, padding: '0.85rem 1.25rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', boxShadow: ts.leakDetected ? 'var(--glow-red)' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className={`sys-dot ${ts.leakDetected ? 'danger' : 'safe'}`} />
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text2)' }}>ESP32-C6 LIVE NODE</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: ts.leakDetected ? 'var(--red)' : 'var(--green)' }}>
+                {ts.leakDetected ? '⚠️ LEAKAGE – RELAY TRIPPED' : '✅ ALL CLEAR'}
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Voltage ADC', value: ts.voltageRaw ?? '—', color: ts.leakDetected ? 'var(--red)' : 'var(--text)' },
+              { label: 'Current ADC', value: ts.currentRaw ?? '—', color: 'var(--blue)' },
+              { label: 'Battery', value: ts.batteryV != null ? `${ts.batteryV.toFixed(2)}V` : '—', color: 'var(--orange)' },
+              { label: 'Power', value: ts.powerOn == null ? '—' : ts.powerOn ? 'ON' : 'OFF', color: ts.powerOn ? 'var(--green)' : 'var(--text2)' },
+            ].map(item => (
+              <div key={item.label} style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>
+                {item.label} <b style={{ color: item.color }}>{item.value}</b>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: '0.7rem', color: 'var(--text2)' }}>
+            {ts.updatedAt ? `Updated ${ts.updatedAt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : ''}
           </div>
         </div>
       )}
