@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Node Health – SELDC</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">⚡ SELDC – Power Control System</div>
+  <ul class="nav-menu">
+    <li><a href="../index.html">Dashboard</a></li>
+    <li><a href="map.html">Live Map</a></li>
+    <li><a href="alerts.html">Alerts</a></li>
+    <li><a href="nodes.html" class="active">Node Health</a></li>
+    <li><a href="sensors.html">Sensor Data</a></li>
+    <li><a href="public.html">Public Safety</a></li>
+  </ul>
+  <div class="nav-right"><div class="live-dot"></div>LIVE</div>
+</nav>
+
+<div class="container">
+  <div class="page-title">Node <span>Health Monitor</span></div>
+
+  <div class="stats-grid" style="margin-bottom:1.25rem;">
+    <div class="stat-card blue"><div class="stat-icon">📡</div><div><div class="stat-value">20</div><div class="stat-label">Total Nodes</div></div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div><div class="stat-value">15</div><div class="stat-label">Online & Safe</div></div></div>
+    <div class="stat-card red"><div class="stat-icon">⚠️</div><div><div class="stat-value">3</div><div class="stat-label">Fault / Leakage</div></div></div>
+    <div class="stat-card orange"><div class="stat-icon">🔌</div><div><div class="stat-value">2</div><div class="stat-label">Offline</div></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">All Nodes – Control Panel</div>
+    <div class="pole-grid" id="nodeGrid"></div>
+  </div>
+</div>
+
+<div class="btn-toast" id="toast"></div>
+
+<script>
+const nodes=[
+  {id:'Pole-01',loc:'MG Road',lat:12.9850,lng:77.5800,voltage:0,status:'safe',power:true,signal:98,uptime:'99.9%'},
+  {id:'Pole-02',loc:'Brigade Road',lat:12.9750,lng:77.5900,voltage:0,status:'safe',power:true,signal:95,uptime:'99.7%'},
+  {id:'Pole-03',loc:'Main Street, Block A',lat:12.9716,lng:77.5946,voltage:65,status:'leakage',power:false,signal:87,uptime:'98.1%'},
+  {id:'Pole-04',loc:'Indiranagar',lat:12.9650,lng:77.6000,voltage:0,status:'safe',power:true,signal:92,uptime:'99.5%'},
+  {id:'Pole-05',loc:'Cubbon Park',lat:12.9800,lng:77.5850,voltage:0,status:'safe',power:true,signal:96,uptime:'99.8%'},
+  {id:'Pole-06',loc:'Koramangala',lat:12.9600,lng:77.5950,voltage:0,status:'safe',power:true,signal:94,uptime:'99.6%'},
+  {id:'Pole-07',loc:'Market Road, Block B',lat:12.9700,lng:77.6100,voltage:0,status:'safe',power:true,signal:91,uptime:'99.4%'},
+  {id:'Pole-08',loc:'HSR Layout',lat:12.9550,lng:77.6050,voltage:0,status:'safe',power:true,signal:97,uptime:'99.9%'},
+  {id:'Pole-09',loc:'Malleshwaram',lat:12.9900,lng:77.5900,voltage:0,status:'safe',power:true,signal:93,uptime:'99.3%'},
+  {id:'Pole-10',loc:'Jayanagar',lat:12.9500,lng:77.5800,voltage:0,status:'safe',power:true,signal:90,uptime:'99.2%'},
+  {id:'Pole-11',loc:'BTM Layout',lat:12.9450,lng:77.6150,voltage:0,status:'safe',power:true,signal:95,uptime:'99.7%'},
+  {id:'Pole-12',loc:'Park Avenue, Block C',lat:12.9820,lng:77.6050,voltage:0,status:'offline',power:false,signal:0,uptime:'87.2%'},
+  {id:'Pole-13',loc:'Rajajinagar',lat:12.9680,lng:77.5750,voltage:0,status:'safe',power:true,signal:88,uptime:'99.0%'},
+  {id:'Pole-14',loc:'JP Nagar',lat:12.9580,lng:77.5900,voltage:0,status:'safe',power:true,signal:92,uptime:'99.5%'},
+  {id:'Pole-15',loc:'Bannerghatta Road',lat:12.9400,lng:77.5950,voltage:0,status:'safe',power:true,signal:89,uptime:'99.1%'},
+  {id:'Pole-16',loc:'Yeshwanthpur',lat:12.9950,lng:77.5950,voltage:0,status:'safe',power:true,signal:96,uptime:'99.8%'},
+  {id:'Pole-17',loc:'Whitefield',lat:12.9780,lng:77.6200,voltage:0,status:'safe',power:true,signal:91,uptime:'99.4%'},
+  {id:'Pole-18',loc:'Station Road, Block D',lat:12.9650,lng:77.5850,voltage:52,status:'leakage',power:false,signal:82,uptime:'97.5%'},
+  {id:'Pole-19',loc:'Lake View, Block F',lat:12.9550,lng:77.6100,voltage:0,status:'offline',power:false,signal:0,uptime:'72.3%'},
+  {id:'Pole-20',loc:'Bus Stand, Block B',lat:12.9700,lng:77.5900,voltage:38,status:'leakage',power:false,signal:79,uptime:'96.8%'},
+];
+
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.color=color||'var(--text)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function sendCmd(idx,cmd){
+  const n=nodes[idx];
+  const url=`/api/power/${cmd}`;
+  fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pole_id:n.id})}).catch(()=>{});
+  if(cmd==='on'){
+    if(n.status==='leakage'){showToast(`⚠️ Cannot turn ON – Leakage active on ${n.id}`,'var(--red)');return;}
+    if(n.status==='offline'){showToast(`⚠️ Node ${n.id} is offline`,'var(--orange)');return;}
+    n.power=true;showToast(`✅ Power ON sent to ${n.id}`,'var(--green)');
+  } else {
+    n.power=false;showToast(`🔴 Power OFF sent to ${n.id}`,'var(--red)');
+  }
+  render();
+}
+
+function render(){
+  document.getElementById('nodeGrid').innerHTML=nodes.map((n,i)=>{
+    const st=n.status==='leakage'?'danger':n.status==='offline'?'offline':'safe';
+    const badgeTxt=n.status==='leakage'?'LEAKAGE':n.status==='offline'?'OFFLINE':'SAFE';
+    const vColor=n.voltage>30?'red':n.status==='offline'?'orange':'green';
+    const onDis=n.status==='leakage'||n.status==='offline'?'disabled':'';
+    const offDis=!n.power||n.status==='offline'?'disabled':'';
+    const sigColor=n.signal>80?'var(--green)':n.signal>50?'var(--yellow)':'var(--red)';
+    return `<div class="pole-card ${st}">
+      <div class="pole-head">
+        <div class="pole-name">📍 ${n.id}</div>
+        <div class="pole-badge ${st}">${badgeTxt}</div>
+      </div>
+      <div class="pole-row"><span class="lbl">Location</span><span class="val">${n.loc}</span></div>
+      <div class="pole-row"><span class="lbl">Voltage</span><span class="val ${vColor}">${n.voltage}V</span></div>
+      <div class="pole-row"><span class="lbl">GPS</span><span class="val" style="font-size:0.72rem">${n.lat.toFixed(4)}°N, ${n.lng.toFixed(4)}°E</span></div>
+      <div class="pole-row"><span class="lbl">Power</span><span class="val ${n.power?'green':'red'}">${n.power?'ON':'OFF'}</span></div>
+      <div class="pole-row"><span class="lbl">Signal</span><span class="val" style="color:${sigColor}">${n.signal}%</span></div>
+      <div class="pole-row"><span class="lbl">Uptime</span><span class="val">${n.uptime}</span></div>
+      <div class="pole-btns">
+        <button class="btn btn-on" ${onDis} onclick="sendCmd(${i},'on')">⚡ Power ON</button>
+        <button class="btn btn-off" ${offDis} onclick="sendCmd(${i},'off')">🔴 Power OFF</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+render();
+setInterval(()=>{
+  nodes.forEach(n=>{if(n.status==='leakage')n.voltage=Math.floor(30+Math.random()*40);});
+  render();
+},2000);
+</script>
+</body>
+</html>

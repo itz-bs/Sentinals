@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alerts – SELDC</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">⚡ SELDC – Power Control System</div>
+  <ul class="nav-menu">
+    <li><a href="../index.html">Dashboard</a></li>
+    <li><a href="map.html">Live Map</a></li>
+    <li><a href="alerts.html" class="active">Alerts</a></li>
+    <li><a href="nodes.html">Node Health</a></li>
+    <li><a href="sensors.html">Sensor Data</a></li>
+    <li><a href="public.html">Public Safety</a></li>
+  </ul>
+  <div class="nav-right"><div class="live-dot"></div>LIVE</div>
+</nav>
+
+<div class="container">
+  <div class="page-title">Leakage <span>Alerts Panel</span></div>
+
+  <!-- Active Alert Banners -->
+  <div class="alert-banner show" style="margin-bottom:0.75rem;">
+    <div class="a-icon">🚨</div>
+    <div><div class="a-title">⚠️ Leakage Detected – Power Disconnected</div>
+    <div class="a-sub">Pole-03 · Main Street, Block A · Voltage: 65V · 10:45 AM</div></div>
+  </div>
+  <div class="alert-banner show" style="margin-bottom:0.75rem;">
+    <div class="a-icon">🚨</div>
+    <div><div class="a-title">⚠️ Leakage Detected – Power Disconnected</div>
+    <div class="a-sub">Pole-18 · Station Road, Block D · Voltage: 52V · 09:50 AM</div></div>
+  </div>
+  <div class="alert-banner show" style="margin-bottom:1.25rem;">
+    <div class="a-icon">🚨</div>
+    <div><div class="a-title">⚠️ Leakage Detected – Power Disconnected</div>
+    <div class="a-sub">Pole-20 · Bus Stand, Block B · Voltage: 38V · 08:20 AM</div></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:1.25rem;">
+    <div class="stat-card red"><div class="stat-icon">⚠️</div><div><div class="stat-value">3</div><div class="stat-label">Active Critical Alerts</div></div></div>
+    <div class="stat-card orange"><div class="stat-icon">🔌</div><div><div class="stat-value">2</div><div class="stat-label">Nodes Offline</div></div></div>
+    <div class="stat-card green"><div class="stat-icon">✅</div><div><div class="stat-value">7</div><div class="stat-label">Resolved Today</div></div></div>
+  </div>
+
+  <!-- Alert Table -->
+  <div class="card">
+    <div class="card-title">Alert History</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Time</th><th>Pole ID</th><th>Location</th><th>Voltage</th><th>GPS</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="alertTable">
+          <tr><td>10:45 AM</td><td><b>Pole-03</b></td><td>Main Street, Block A</td><td style="color:var(--red);font-weight:700">65V</td><td style="font-size:0.72rem">12.9716°N, 77.5946°E</td><td><span class="badge critical">CRITICAL</span></td><td><button class="btn btn-off btn" style="font-size:0.7rem;padding:0.25rem 0.6rem" onclick="ack(this)">Acknowledge</button></td></tr>
+          <tr><td>10:30 AM</td><td><b>Pole-12</b></td><td>Park Avenue, Block C</td><td style="color:var(--yellow)">N/A</td><td style="font-size:0.72rem">12.9820°N, 77.6050°E</td><td><span class="badge offline-b">OFFLINE</span></td><td><button class="btn" style="font-size:0.7rem;padding:0.25rem 0.6rem;background:rgba(234,179,8,0.12);color:var(--yellow);border:1px solid rgba(234,179,8,0.3)" onclick="ack(this)">Acknowledge</button></td></tr>
+          <tr><td>10:15 AM</td><td><b>Pole-07</b></td><td>Market Road, Block B</td><td style="color:var(--green)">0V</td><td style="font-size:0.72rem">12.9700°N, 77.6100°E</td><td><span class="badge safe">RESOLVED</span></td><td><span style="color:var(--text2);font-size:0.75rem">—</span></td></tr>
+          <tr><td>09:50 AM</td><td><b>Pole-18</b></td><td>Station Road, Block D</td><td style="color:var(--red);font-weight:700">52V</td><td style="font-size:0.72rem">12.9650°N, 77.5850°E</td><td><span class="badge critical">CRITICAL</span></td><td><button class="btn btn-off" style="font-size:0.7rem;padding:0.25rem 0.6rem" onclick="ack(this)">Acknowledge</button></td></tr>
+          <tr><td>09:30 AM</td><td><b>Pole-15</b></td><td>School Street, Block A</td><td style="color:var(--green)">0V</td><td style="font-size:0.72rem">12.9400°N, 77.5950°E</td><td><span class="badge safe">RESOLVED</span></td><td><span style="color:var(--text2);font-size:0.75rem">—</span></td></tr>
+          <tr><td>09:10 AM</td><td><b>Pole-22</b></td><td>Temple Road, Block E</td><td style="color:var(--green)">0V</td><td style="font-size:0.72rem">12.9480°N, 77.6020°E</td><td><span class="badge safe">RESOLVED</span></td><td><span style="color:var(--text2);font-size:0.75rem">—</span></td></tr>
+          <tr><td>08:45 AM</td><td><b>Pole-19</b></td><td>Lake View, Block F</td><td style="color:var(--yellow)">N/A</td><td style="font-size:0.72rem">12.9550°N, 77.6100°E</td><td><span class="badge offline-b">OFFLINE</span></td><td><button class="btn" style="font-size:0.7rem;padding:0.25rem 0.6rem;background:rgba(234,179,8,0.12);color:var(--yellow);border:1px solid rgba(234,179,8,0.3)" onclick="ack(this)">Acknowledge</button></td></tr>
+          <tr><td>08:20 AM</td><td><b>Pole-20</b></td><td>Bus Stand, Block B</td><td style="color:var(--red);font-weight:700">38V</td><td style="font-size:0.72rem">12.9700°N, 77.5900°E</td><td><span class="badge critical">CRITICAL</span></td><td><button class="btn btn-off" style="font-size:0.7rem;padding:0.25rem 0.6rem" onclick="ack(this)">Acknowledge</button></td></tr>
+          <tr><td>07:55 AM</td><td><b>Pole-11</b></td><td>Hospital Road, Block C</td><td style="color:var(--green)">0V</td><td style="font-size:0.72rem">12.9450°N, 77.6150°E</td><td><span class="badge safe">RESOLVED</span></td><td><span style="color:var(--text2);font-size:0.75rem">—</span></td></tr>
+          <tr><td>07:30 AM</td><td><b>Pole-05</b></td><td>Garden Street, Block A</td><td style="color:var(--green)">0V</td><td style="font-size:0.72rem">12.9800°N, 77.5850°E</td><td><span class="badge safe">RESOLVED</span></td><td><span style="color:var(--text2);font-size:0.75rem">—</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <div class="card-title">Event Log (Last 5)</div>
+    <div class="log-list">
+      <div class="log-item danger"><span class="log-time">10:45 AM</span><span>🔴 Leakage at Pole-03 (Main Street) – Power disconnected automatically</span></div>
+      <div class="log-item warning"><span class="log-time">10:30 AM</span><span>⚠️ Pole-12 (Park Avenue) went offline – No response</span></div>
+      <div class="log-item safe"><span class="log-time">10:15 AM</span><span>🟢 Pole-07 (Market Road) restored to normal operation</span></div>
+      <div class="log-item danger"><span class="log-time">09:50 AM</span><span>🔴 High voltage 52V at Pole-18 (Station Road) – Power disconnected</span></div>
+      <div class="log-item danger"><span class="log-time">08:20 AM</span><span>🔴 Leakage at Pole-20 (Bus Stand) – Emergency response notified</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function ack(btn){
+  const row=btn.closest('tr');
+  const badge=row.querySelector('.badge');
+  badge.className='badge safe';badge.textContent='ACKNOWLEDGED';
+  btn.disabled=true;btn.textContent='Done';btn.style.opacity='0.4';
+}
+</script>
+</body>
+</html>

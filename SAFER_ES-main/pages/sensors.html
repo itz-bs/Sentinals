@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sensor Data – SELDC</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">⚡ SELDC – Power Control System</div>
+  <ul class="nav-menu">
+    <li><a href="../index.html">Dashboard</a></li>
+    <li><a href="map.html">Live Map</a></li>
+    <li><a href="alerts.html">Alerts</a></li>
+    <li><a href="nodes.html">Node Health</a></li>
+    <li><a href="sensors.html" class="active">Sensor Data</a></li>
+    <li><a href="public.html">Public Safety</a></li>
+  </ul>
+  <div class="nav-right"><div class="live-dot"></div>LIVE</div>
+</nav>
+
+<div class="container">
+  <div class="page-title">Real-Time <span>Sensor Data</span></div>
+
+  <div class="sys-bar" style="margin-bottom:1.25rem;">
+    <div class="sys-main">
+      <div class="sys-dot danger"></div>
+      <div><div class="sys-label">SENSOR STATUS</div><div class="sys-val danger">3 SENSORS ABOVE THRESHOLD (30V)</div></div>
+    </div>
+    <div class="refresh-info"><div class="spin"></div>Auto-refresh 2s</div>
+  </div>
+
+  <!-- Live Voltage Chart -->
+  <div class="card">
+    <div class="card-title">Live Voltage Chart – All Faulty Poles</div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+      <span style="font-size:0.75rem;color:var(--text2);">Threshold: <b style="color:var(--red)">30V</b></span>
+      <span style="font-size:0.75rem;color:var(--text2);">Pole-03: <b id="v03" style="color:var(--red)">65V</b></span>
+      <span style="font-size:0.75rem;color:var(--text2);">Pole-18: <b id="v18" style="color:var(--red)">52V</b></span>
+      <span style="font-size:0.75rem;color:var(--text2);">Pole-20: <b id="v20" style="color:var(--red)">38V</b></span>
+    </div>
+    <div class="chart-wrap" id="voltChart"></div>
+  </div>
+
+  <!-- Sensor Cards -->
+  <div class="sensor-grid" id="sensorGrid"></div>
+
+  <!-- Raw JSON Feed -->
+  <div class="card">
+    <div class="card-title">Raw API Feed – /api/data</div>
+    <pre id="jsonFeed" style="background:var(--card2);border-radius:8px;padding:1rem;font-size:0.75rem;color:var(--green);overflow-x:auto;line-height:1.6;border:1px solid var(--border);"></pre>
+  </div>
+</div>
+
+<script>
+const THRESHOLD=30;
+const sensors=[
+  {id:'Pole-03',loc:'Main Street, Block A',voltage:65,body:62,status:'leakage',lat:12.9716,lng:77.5946},
+  {id:'Pole-18',loc:'Station Road, Block D',voltage:52,body:48,status:'leakage',lat:12.9650,lng:77.5850},
+  {id:'Pole-20',loc:'Bus Stand, Block B',voltage:38,body:35,status:'leakage',lat:12.9700,lng:77.5900},
+  {id:'Pole-01',loc:'MG Road',voltage:0,body:0,status:'safe',lat:12.9850,lng:77.5800},
+  {id:'Pole-07',loc:'Market Road, Block B',voltage:0,body:0,status:'safe',lat:12.9700,lng:77.6100},
+  {id:'Pole-11',loc:'BTM Layout',voltage:0,body:0,status:'safe',lat:12.9450,lng:77.6150},
+];
+
+const history=Array(12).fill(0).map((_,i)=>({
+  v03:55+Math.floor(Math.random()*20),
+  v18:45+Math.floor(Math.random()*15),
+  v20:30+Math.floor(Math.random()*15),
+}));
+
+function renderChart(){
+  const max=100;
+  document.getElementById('voltChart').innerHTML=history.map(h=>`
+    <div class="bar b-danger" style="height:${(h.v03/max)*100}%" title="Pole-03: ${h.v03}V"></div>
+    <div class="bar b-danger" style="height:${(h.v18/max)*100}%;opacity:0.7" title="Pole-18: ${h.v18}V"></div>
+    <div class="bar b-danger" style="height:${(h.v20/max)*100}%;opacity:0.5" title="Pole-20: ${h.v20}V"></div>
+    <div style="flex:0.3;"></div>
+  `).join('');
+}
+
+function renderSensors(){
+  document.getElementById('sensorGrid').innerHTML=sensors.map(s=>{
+    const st=s.status==='leakage'?'danger':'safe';
+    const vColor=s.voltage>THRESHOLD?'var(--red)':'var(--green)';
+    return `<div class="sensor-card" style="border-top:3px solid ${s.voltage>THRESHOLD?'var(--red)':'var(--green)'}">
+      <h3>📍 ${s.id} – ${s.loc}</h3>
+      <div class="s-row"><span style="color:var(--text2)">Voltage Detected</span><span class="s-val" style="color:${vColor}">${s.voltage}V</span></div>
+      <div class="s-row"><span style="color:var(--text2)">Pole Body Voltage</span><span class="s-val" style="color:${vColor}">${s.body}V</span></div>
+      <div class="s-row"><span style="color:var(--text2)">Threshold</span><span class="s-val" style="color:var(--text2)">30V</span></div>
+      <div class="s-row"><span style="color:var(--text2)">Leakage Status</span><span class="s-val" style="color:${s.voltage>THRESHOLD?'var(--red)':'var(--green)'}">${s.voltage>THRESHOLD?'⚠️ DETECTED':'✅ SAFE'}</span></div>
+      <div class="s-row"><span style="color:var(--text2)">GPS</span><span style="font-size:0.72rem;color:var(--text2)">${s.lat.toFixed(4)}°N, ${s.lng.toFixed(4)}°E</span></div>
+      <div class="s-row"><span style="color:var(--text2)">Updated</span><span style="color:var(--text2);font-size:0.75rem">${new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderJSON(){
+  const feed=sensors.filter(s=>s.status==='leakage').map(s=>({
+    pole_id:s.id,voltage:s.voltage,status:s.status,
+    location:`${s.lat},${s.lng}`,timestamp:new Date().toISOString()
+  }));
+  document.getElementById('jsonFeed').textContent=JSON.stringify(feed,null,2);
+}
+
+function tick(){
+  sensors.forEach(s=>{
+    if(s.status==='leakage'){
+      s.voltage=Math.floor(30+Math.random()*45);
+      s.body=s.voltage-Math.floor(Math.random()*5);
+    }
+  });
+  history.shift();
+  history.push({v03:sensors[0].voltage,v18:sensors[1].voltage,v20:sensors[2].voltage});
+  document.getElementById('v03').textContent=sensors[0].voltage+'V';
+  document.getElementById('v18').textContent=sensors[1].voltage+'V';
+  document.getElementById('v20').textContent=sensors[2].voltage+'V';
+  renderChart();renderSensors();renderJSON();
+}
+
+renderChart();renderSensors();renderJSON();
+setInterval(tick,2000);
+</script>
+</body>
+</html>
